@@ -6,3 +6,4 @@ scikit-optimize==0.7.1
 numpy==1.18.1
 pandas==1.0.0
 seaborn
+mlflow
