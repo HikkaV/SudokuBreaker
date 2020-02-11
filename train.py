@@ -49,3 +49,6 @@ class Train:
         sudoku_model.save(path_model)
         if plot_chart:
             plot(sudoku_model.hist)
+    # TODO: MAKE EVALUATE FUNCTION
+    def evaluate(self, path):
+        pass
