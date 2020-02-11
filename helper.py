@@ -6,6 +6,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
 
+
 def preprocess_y(x):
     matrix = []
     for i in x:
@@ -19,17 +20,23 @@ def preprocess_x(x):
         matrix.append(int(i))
     return np.array(matrix).reshape((9, 9, 1)) / 9
 
-def load_and_process(path, seed=5, test_portion=0.15):
+
+def load_and_process(path, seed=5, validation_portion=0.15, test_portion=0.1):
     df = pd.read_csv(path)
     df['quizzes'] = df['quizzes'].apply(preprocess_x)
     df['solutions'] = df['solutions'].apply(preprocess_y)
-    train_df, test_df = train_test_split(df, test_size=test_portion, random_state=seed)
-    train_x, train_y, test_x, test_y = np.stack(train_df['quizzes'].values), np.stack(train_df['solutions'].values), \
-                                       np.stack(test_df['quizzes'].values), np.stack(test_df['solutions'].values)
-    return train_x, train_y, test_x, test_y
+    train_df, validation_df = train_test_split(df, test_size=validation_portion, random_state=seed)
+    train_df, test_df = train_test_split(train_df, test_size=test_portion, random_state=seed)
+    train_x, train_y, val_x, val_y, test_x, test_y = np.stack(train_df['quizzes'].values), np.stack(
+        train_df['solutions'].values), \
+                                                     np.stack(validation_df['quizzes'].values), np.stack(
+        validation_df['solutions'].values), np.stack(test_df['quizzes'].values), np.stack(
+        test_df['solutions'].values)
+
+    return train_x, train_y, val_x, val_y, test_x, test_y
 
 
-def plot(hist, by='loss', figsize=(15, 12),path='loss.png'):
+def plot(hist, by='loss', figsize=(15, 12), path='loss.png'):
     assert by in ['loss', 'acc']
     sns.set()
     hist = dict((k, v) for k, v in hist.items() if by in k)
@@ -47,6 +54,7 @@ def plot(hist, by='loss', figsize=(15, 12),path='loss.png'):
     plt.legend(list(hist.keys()))
     plt.xticks(range(0, epochs + 1, 1))
     plt.savefig()
+
 
 def timeit(method):
     def timed(*args, **kw):

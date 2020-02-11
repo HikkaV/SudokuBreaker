@@ -7,6 +7,18 @@ from helper import preprocess_x, np
 class SudokuBreaker:
     def __init__(self, path=None, layers=None, average_pooling=False):
         self.params = {}
+        self.train_loss = None
+        self.val_loss = None
+        self.train_acc = None
+        self.val_acc = None
+        self.train_masked_loss = None
+        self.val_masked_loss = None
+        self.train_masked_acc = None
+        self.val_masked_acc = None
+        self.batch = None
+        self.epochs = None
+        self.learning_rate = None
+        self.custom_training = False
         if not path:
             self.layers = layers
             self.average_pooling = average_pooling
@@ -100,6 +112,9 @@ class SudokuBreaker:
     def get_val_masked_acc(self):
         return self.val_masked_acc
 
+    def get_params(self):
+        return self.get_params()
+
     def __predict(self, x, training=True):
         x = tf.cast(x, dtype=tf.float32)
         return self.model(x, training=training)
@@ -132,6 +147,10 @@ class SudokuBreaker:
         hist = self.model.fit(train_x, train_y, validation_data=[test_x, test_y], epochs=epochs,
                               batch_size=batch)
         self.hist = hist.history
+        self.train_loss = self.hist['loss'][-1]
+        self.val_loss = self.hist['val_loss'][-1]
+        self.train_acc = self.hist['acc'][-1]
+        self.val_acc = self.hist['val_acc'][-1]
 
     def save(self, path):
         '''
@@ -166,7 +185,7 @@ class SudokuBreaker:
             feat = feat.reshape((9, 9))
             mask = (feat == 0)
 
-            if (mask.sum() == 0):
+            if mask.sum() == 0:
                 break
 
             prob_new = prob * mask
@@ -178,6 +197,10 @@ class SudokuBreaker:
             feat[x][y] = val
             feat = feat / 9
         return pred
+
+    def eval(self, test_x, test_y):
+        result = np.apply_along_axis(arr=test_x, axis=1, func1d=self.predict)
+        return np.equal(result, test_y).astype(np.int32).mean()
 
     def fit_custom(self, train_x, train_y, test_x, test_y, batch=32, epochs=10, learning_rate=0.001,
                    id_mlflow=25):
@@ -204,6 +227,7 @@ class SudokuBreaker:
                                 'epochs': self.epochs,
                                 'learning_rate': self.learning_rate,
                                 'custom_training': self.custom_training})
+            mlflow.log_params(self.params)
             train_loss_results = []
             train_accuracy_results = []
             train_masked_loss_results = []
@@ -235,10 +259,10 @@ class SudokuBreaker:
                 acc_res = epoch_accuracy.result().numpy()
                 masked_loss_res = epoch_masked_loss_avg.result().numpy()
                 masked_acc_res = epoch_masked_accuracy.result().numpy()
-                mlflow.log_metric('train_loss', loss_res)
-                mlflow.log_metric('train_acc', acc_res)
-                mlflow.log_metric('train_masked_acc', masked_acc_res)
-                mlflow.log_metric('train_masked_loss', masked_loss_res)
+                mlflow.log_metric('train_loss', loss_res, step=epoch)
+                mlflow.log_metric('train_acc', acc_res, step=epoch)
+                mlflow.log_metric('train_masked_acc', masked_acc_res,step=epoch)
+                mlflow.log_metric('train_masked_loss', masked_loss_res, step=epoch)
                 train_accuracy_results.append(acc_res)
                 train_masked_loss_results.append(masked_loss_res)
                 train_masked_accuracy_results.append(masked_acc_res)
@@ -259,10 +283,10 @@ class SudokuBreaker:
                     test_acc_res = epoch_test_accuracy.result().numpy()
                     test_masked_loss_res = epoch_test_masked_loss_avg.result().numpy()
                     test_masked_acc_res = epoch_test_masked_accuracy.result().numpy()
-                    mlflow.log_metric('val_loss', test_loss_res)
-                    mlflow.log_metric('val_acc', test_acc_res)
-                    mlflow.log_metric('val_masked_acc', test_masked_acc_res)
-                    mlflow.log_metric('val_masked_loss', test_masked_loss_res)
+                    mlflow.log_metric('val_loss', test_loss_res, step=epoch)
+                    mlflow.log_metric('val_acc', test_acc_res, step=epoch)
+                    mlflow.log_metric('val_masked_acc', test_masked_acc_res, step=epoch)
+                    mlflow.log_metric('val_masked_loss', test_masked_loss_res, step=epoch)
                     test_loss_results.append(test_loss_res)
                     test_accuracy_results.append(test_acc_res)
                     test_masked_loss_results.append(test_masked_loss_res)
