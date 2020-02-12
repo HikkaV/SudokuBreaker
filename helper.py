@@ -32,7 +32,7 @@ def load_and_process(path, seed=5, validation_portion=0.15, test_portion=0.1):
                                                      np.stack(validation_df['quizzes'].values), np.stack(
         validation_df['solutions'].values), np.stack(test_df['quizzes'].values), np.stack(
         test_df['solutions'].values)
-
+    print('Made data')
     return train_x, train_y, val_x, val_y, test_x, test_y
 
 
