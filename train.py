@@ -1,15 +1,19 @@
 from skopt import forest_minimize
 from sudoku_breaker import SudokuBreaker
+import mlflow
 from helper import load_and_process, save_params, load_params, plot, np
 import random
 from colored import fg
 from settings import layer_combination
+import datetime
+
 
 class Train:
-    def __init__(self, path, seed=5, custom=True, validation_portion=0.15, test_portion=0.1):
+    def __init__(self, path, seed=5, custom=True, validation_portion=0.15, test_portion=0.1, exp_name='tmp'):
         self.train_x, self.train_y, self.val_x, self.val_y, \
         self.test_x, self.test_y = load_and_process(path, seed, test_portion=test_portion,
                                                     validation_portion=validation_portion)
+        self.exp_name = exp_name
         self.custom = custom
         self.sudoku_model = None
 
@@ -22,16 +26,22 @@ class Train:
                                                          learning_rate))
         sudoku_model = SudokuBreaker(layers=layers, average_pooling=average_pooling)
         id_mlflow = random.randint(1, 2542314)
+        exp_name = self.exp_name + '_{}'.format(datetime.datetime.now())
+        mlflow.create_experiment(exp_name)
+        mlflow.set_experiment(exp_name)
         if self.custom:
             sudoku_model.fit_custom(self.train_x, self.train_y, self.val_x, self.val_y,
                                     batch=batch, epochs=epochs, learning_rate=learning_rate, id_mlflow=id_mlflow)
         else:
             sudoku_model.fit_inbuilt(self.train_x, self.train_y, self.val_x, self.val_y,
                                      batch=batch, epochs=epochs, learning_rate=learning_rate)
-        return self.minimize_loss(sudoku_model.get_val_masked_acc(), sudoku_model.get_val_acc())
+        if self.custom:
+            return self.minimize_loss(sudoku_model.get_val_masked_acc(), sudoku_model.get_val_acc())
+        else:
+            return self.minimize_loss(sudoku_model.get_val_acc(), sudoku_model.get_train_acc())
 
-    def minimize_loss(self, masked_acc, acc):
-        return -(masked_acc + acc * 0.7) / 2
+    def minimize_loss(self, a, b):
+        return -(a + b * 0.7) / 2
 
     def minimize(self, space, ncalls, minimize_seed, path_params='best_params.json'):
         best_params = forest_minimize(self.objective, space, n_calls=ncalls, random_state=minimize_seed)['x']

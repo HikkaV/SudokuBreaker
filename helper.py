@@ -53,7 +53,7 @@ def plot(hist, by='loss', figsize=(15, 12), path='loss.png'):
     plt.xlabel('Epochs')
     plt.legend(list(hist.keys()))
     plt.xticks(range(0, epochs + 1, 1))
-    plt.savefig()
+    plt.savefig(path)
 
 
 def timeit(method):
