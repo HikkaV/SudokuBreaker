@@ -85,9 +85,6 @@ class SudokuBreaker:
         y_pred = self.model(tf.cast(x, dtype=tf.float32), training)
         return self.loss_object(y_true=y_true, y_pred=y_pred)
 
-    def show_table_results(self):
-        pass
-
     def get_train_loss(self):
         return self.train_loss
 
@@ -165,6 +162,10 @@ class SudokuBreaker:
         path - path to the model to save it
         '''
         return tf.keras.models.load_model(path, compile=False)
+
+    # TODO: complete the function
+    def predict_on_batch(self):
+        pass
 
     def predict(self, x):
         '''

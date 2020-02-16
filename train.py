@@ -1,6 +1,8 @@
 import os
 
 from skopt import forest_minimize
+from tqdm import tqdm
+
 from sudoku_breaker import SudokuBreaker
 import mlflow
 from helper import load_and_process, save_params, load_params, plot, np
@@ -8,7 +10,8 @@ import random
 from colored import fg
 from settings import layer_combination
 import datetime
-
+import tensorflow as tf
+tf.random.set_seed(5)
 
 class Train:
     def __init__(self, path, seed=5, custom=True, validation_portion=0.15, test_portion=0.1, exp_name='tmp'):
@@ -50,7 +53,7 @@ class Train:
         save_params(best_params, path_params=path_params)
 
     def train(self, path_params='best_params.json', path_model='model.h5',
-              plot_chart=False,handmade_params=None):
+              plot_chart=False, handmade_params=None):
         if os.path.exists(path_params) and handmade_params:
             layers, average_pooling, batch, epochs, learning_rate = load_params(path_params)
         else:
@@ -73,16 +76,10 @@ class Train:
         if plot_chart:
             plot(sudoku_model.hist)
 
-    def sample_generator(self, X, y, batch_size=64):
-        X, y = np.array_split(X, int(np.ceil(len(X) / batch_size))), \
-               np.array_split(y, int(np.ceil(len(y) / batch_size)))
-        for sample_x, sample_y in (X, y):
-            yield sample_x, sample_y
-
-    def evaluate(self, path_model, batch_size=64):
+    def evaluate(self, path_model):
         self.sudoku_model = SudokuBreaker(path=path_model)
         mean_acc = []
-        for x, y in self.sample_generator(self.test_x, self.test_y, batch_size=batch_size):
-            mean_acc.append(np.equal(self.sudoku_model.predict(x), y).astype(int).mean())
+        for x, y in tqdm(zip(self.test_x, self.test_y)):
+            mean_acc.append(np.equal(self.sudoku_model.predict(x), y.reshape((9, 9)) + 1).astype(int).mean())
         mean_acc = np.mean(mean_acc)
         print('Mean accuracy on test data : {}'.format(mean_acc))
