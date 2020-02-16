@@ -10,7 +10,7 @@ conf = {
     "seed": 5,
     "random_state": 4,
     "ncalls": 10,
-    "exp_name": "zoomed_exp",
+    "exp_name": "final_train",
     "custom": True,
     "space": [
         list(range(len(layer_combination))),  # layer type
@@ -20,5 +20,7 @@ conf = {
         (0.0001, 0.001)  # eta
     ],
     "eval_batch_size": 64,
-    "plot_chart": False
+    "plot_chart": False,
+    # layers, average_pooling, batch, epochs, learning_rate
+    "handmade_params": [1, False, 64, 19, 0.000755]
 }

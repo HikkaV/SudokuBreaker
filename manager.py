@@ -9,7 +9,7 @@ def train_wrapper(args):
     train_cls = Train(path=conf["path_data"], seed=conf["seed"], custom=conf["custom"],
                       validation_portion=conf["val_partion"], test_portion=conf["test_portion"])
     train_cls.train(path_params=conf["path_params"], path_model=conf["path_model"],
-                    plot_chart=conf["plot_chart"])
+                    plot_chart=conf["plot_chart"], handmade_params=conf["handmade_params"])
 
 
 def define_params_wrapper(args):

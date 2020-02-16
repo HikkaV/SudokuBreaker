@@ -1,3 +1,5 @@
+import os
+
 from skopt import forest_minimize
 from sudoku_breaker import SudokuBreaker
 import mlflow
@@ -26,9 +28,6 @@ class Train:
                                                          learning_rate))
         sudoku_model = SudokuBreaker(layers=layers, average_pooling=average_pooling)
         id_mlflow = random.randint(1, 2542314)
-        exp_name = self.exp_name + '_{}'.format(datetime.datetime.now())
-        mlflow.create_experiment(exp_name)
-        mlflow.set_experiment(exp_name)
         if self.custom:
             sudoku_model.fit_custom(self.train_x, self.train_y, self.val_x, self.val_y,
                                     batch=batch, epochs=epochs, learning_rate=learning_rate, id_mlflow=id_mlflow)
@@ -44,12 +43,18 @@ class Train:
         return -(a + b * 0.7) / 2
 
     def minimize(self, space, ncalls, minimize_seed, path_params='best_params.json'):
+        exp_name = self.exp_name + '_{}'.format(datetime.datetime.now())
+        mlflow.create_experiment(exp_name)
+        mlflow.set_experiment(exp_name)
         best_params = forest_minimize(self.objective, space, n_calls=ncalls, random_state=minimize_seed)['x']
         save_params(best_params, path_params=path_params)
 
     def train(self, path_params='best_params.json', path_model='model.h5',
-              plot_chart=False):
-        layers, average_pooling, batch, epochs, learning_rate = load_params(path_params)
+              plot_chart=False,handmade_params=None):
+        if os.path.exists(path_params) and handmade_params:
+            layers, average_pooling, batch, epochs, learning_rate = load_params(path_params)
+        else:
+            layers, average_pooling, batch, epochs, learning_rate = handmade_params
         layers = layer_combination[layers]
         print(fg(
             'green') + 'Parameters : layers : {0}, average_pooling : {1}, batch : {2}, epochs : '
