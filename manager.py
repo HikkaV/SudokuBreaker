@@ -24,7 +24,7 @@ def evaluate_wrapper(args):
     train_cls = Train(path=conf["path_data"], seed=conf["seed"], custom=conf["custom"],
                       validation_portion=conf["val_portion"], test_portion=conf["test_portion"]
                       )
-    train_cls.evaluate(path_model=conf['path_model'])
+    train_cls.evaluate(path_model=conf['path_model'],batch_size=conf['eval_batch_size'])
 
 
 def parse_args():

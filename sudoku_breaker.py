@@ -163,9 +163,8 @@ class SudokuBreaker:
         '''
         return tf.keras.models.load_model(path, compile=False)
 
-    # TODO: complete the function
-    def predict_on_batch(self):
-        pass
+    def predict_on_batch(self, x):
+        return np.array(list(map(self.predict,x)))
 
     def predict(self, x):
         '''
@@ -262,7 +261,7 @@ class SudokuBreaker:
                 masked_acc_res = epoch_masked_accuracy.result().numpy()
                 mlflow.log_metric('train_loss', loss_res, step=epoch)
                 mlflow.log_metric('train_acc', acc_res, step=epoch)
-                mlflow.log_metric('train_masked_acc', masked_acc_res,step=epoch)
+                mlflow.log_metric('train_masked_acc', masked_acc_res, step=epoch)
                 mlflow.log_metric('train_masked_loss', masked_loss_res, step=epoch)
                 train_accuracy_results.append(acc_res)
                 train_masked_loss_results.append(masked_loss_res)

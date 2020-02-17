@@ -1,8 +1,6 @@
 import os
-
 from skopt import forest_minimize
 from tqdm import tqdm
-
 from sudoku_breaker import SudokuBreaker
 import mlflow
 from helper import load_and_process, save_params, load_params, plot, np
@@ -11,10 +9,14 @@ from colored import fg
 from settings import layer_combination
 import datetime
 import tensorflow as tf
+
 tf.random.set_seed(5)
 
+
 class Train:
-    def __init__(self, path, seed=5, custom=True, validation_portion=0.15, test_portion=0.1, exp_name='tmp'):
+    def __init__(self, path, seed=5, custom=True, validation_portion=0.15, test_portion=0.1, exp_name='tmp',
+                 minimize_scaler=0.7):
+        self.minimize_scaler = minimize_scaler
         self.train_x, self.train_y, self.val_x, self.val_y, \
         self.test_x, self.test_y = load_and_process(path, seed, test_portion=test_portion,
                                                     validation_portion=validation_portion)
@@ -43,7 +45,7 @@ class Train:
             return self.minimize_loss(sudoku_model.get_val_acc(), sudoku_model.get_train_acc())
 
     def minimize_loss(self, a, b):
-        return -(a + b * 0.7) / 2
+        return -(a + b * self.minimize_scaler) / 2
 
     def minimize(self, space, ncalls, minimize_seed, path_params='best_params.json'):
         exp_name = self.exp_name + '_{}'.format(datetime.datetime.now())
@@ -76,10 +78,20 @@ class Train:
         if plot_chart:
             plot(sudoku_model.hist)
 
-    def evaluate(self, path_model):
+    def evaluate(self, path_model, batch_size=None):
+        if batch_size:
+            number_parts = int(np.ceil(self.test_x.shape[0] / batch_size))
+            print('Parts of data to be processed : {}'.format(number_parts))
+            self.test_x, self.test_y = np.array_split(self.test_x, number_parts), \
+                                       np.array_split(self.test_y, number_parts)
         self.sudoku_model = SudokuBreaker(path=path_model)
         mean_acc = []
         for x, y in tqdm(zip(self.test_x, self.test_y)):
-            mean_acc.append(np.equal(self.sudoku_model.predict(x), y.reshape((9, 9)) + 1).astype(int).mean())
+            predicted = self.sudoku_model.predict_on_batch(x)
+            if batch_size:
+                y = y.reshape((predicted.shape[0], 9, 9)) + 1
+            else:
+                y = y.reshape((9, 9)) + 1
+            mean_acc.append(np.equal(predicted, y).astype(int).mean())
         mean_acc = np.mean(mean_acc)
         print('Mean accuracy on test data : {}'.format(mean_acc))
