@@ -3,7 +3,7 @@ from skopt import forest_minimize
 from tqdm import tqdm
 from sudoku_breaker import SudokuBreaker
 import mlflow
-from helper import load_and_process, save_params, load_params, plot, np
+from helper import load_and_process, save_params, load_params, plot, np, load_hardcore
 import random
 from colored import fg
 from settings import layer_combination
@@ -15,11 +15,14 @@ tf.random.set_seed(5)
 
 class Train:
     def __init__(self, path, seed=5, custom=True, validation_portion=0.15, test_portion=0.1, exp_name='tmp',
-                 minimize_scaler=0.7):
+                 minimize_scaler=0.7, hardcore_path=None):
         self.minimize_scaler = minimize_scaler
-        self.train_x, self.train_y, self.val_x, self.val_y, \
-        self.test_x, self.test_y = load_and_process(path, seed, test_portion=test_portion,
-                                                    validation_portion=validation_portion)
+        if hardcore_path:
+            self.test_x, self.test_y = load_hardcore()
+        else:
+            self.train_x, self.train_y, self.val_x, self.val_y, \
+            self.test_x, self.test_y = load_and_process(path, seed, test_portion=test_portion,
+                                                        validation_portion=validation_portion)
         self.exp_name = exp_name
         self.custom = custom
         self.sudoku_model = None
@@ -87,10 +90,11 @@ class Train:
         self.sudoku_model = SudokuBreaker(path=path_model)
         mean_acc = []
         for x, y in tqdm(zip(self.test_x, self.test_y)):
-            predicted = self.sudoku_model.predict_on_batch(x)
             if batch_size:
+                predicted = self.sudoku_model.predict_on_batch(x)
                 y = y.reshape((predicted.shape[0], 9, 9)) + 1
             else:
+                predicted = self.sudoku_model.predict(x)
                 y = y.reshape((9, 9)) + 1
             mean_acc.append(np.equal(predicted, y).astype(int).mean())
         mean_acc = np.mean(mean_acc)

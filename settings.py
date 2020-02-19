@@ -12,6 +12,7 @@ conf = {
     "ncalls": 10,
     "exp_name": "final_train",
     "custom": True,
+    "hardcore_path": "hardcore_sudoku.csv",
     "space": [
         list(range(len(layer_combination))),  # layer type
         [False],  # average pooling

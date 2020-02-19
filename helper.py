@@ -36,6 +36,15 @@ def load_and_process(path, seed=5, validation_portion=0.15, test_portion=0.1):
     return train_x, train_y, val_x, val_y, test_x, test_y
 
 
+def load_hardcore(path='hardcore_sudoku.csv'):
+    df = pd.read_csv(path)
+    df['x'] = df['x'].apply(preprocess_x)
+    df['y'] = df['y'].apply(preprocess_y)
+    x, y = np.stack(df['x'].values), np.stack(df['y'].values)
+    print(x.shape)
+    return x, y
+
+
 def plot(hist, by='loss', figsize=(15, 12), path='loss.png'):
     assert by in ['loss', 'acc']
     sns.set()
