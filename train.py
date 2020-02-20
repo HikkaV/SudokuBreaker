@@ -88,6 +88,7 @@ class Train:
             self.test_x, self.test_y = np.array_split(self.test_x, number_parts), \
                                        np.array_split(self.test_y, number_parts)
         self.sudoku_model = SudokuBreaker(path=path_model)
+        mean_acc_per_cell = []
         mean_acc = []
         for x, y in tqdm(zip(self.test_x, self.test_y)):
             if batch_size:
@@ -96,6 +97,12 @@ class Train:
             else:
                 predicted = self.sudoku_model.predict(x)
                 y = y.reshape((9, 9)) + 1
-            mean_acc.append(np.equal(predicted, y).astype(int).mean())
+            mean_acc_per_cell.append(np.equal(predicted, y).astype(int).mean())
+            if (predicted-y).sum()==0:
+                mean_acc.append(1)
+            else:
+                mean_acc.append(0)
         mean_acc = np.mean(mean_acc)
+        mean_acc_per_cell = np.mean(mean_acc_per_cell)
+        print('Mean accuracy per cell on test data : {}'.format(mean_acc_per_cell))
         print('Mean accuracy on test data : {}'.format(mean_acc))
