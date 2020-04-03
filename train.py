@@ -98,7 +98,7 @@ class Train:
                 predicted = self.sudoku_model.predict(x)
                 y = y.reshape((9, 9)) + 1
             mean_acc_per_cell.append(np.equal(predicted, y).astype(int).mean())
-            if (predicted-y).sum()==0:
+            if (predicted - y).sum() == 0:
                 mean_acc.append(1)
             else:
                 mean_acc.append(0)
