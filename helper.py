@@ -25,8 +25,12 @@ def load_and_process(path, seed=5, validation_portion=0.15, test_portion=0.1):
     df = pd.read_csv(path)
     df['quizzes'] = df['quizzes'].apply(preprocess_x)
     df['solutions'] = df['solutions'].apply(preprocess_y)
-    train_df, validation_df = train_test_split(df, test_size=validation_portion, random_state=seed)
-    train_df, test_df = train_test_split(train_df, test_size=test_portion, random_state=seed)
+    if validation_portion==test_portion:
+        train_df, validation_df = train_test_split(df, test_size=validation_portion+test_portion, random_state=seed)
+        validation_df, test_df = train_test_split(validation_df, test_size=0.5, random_state=seed)
+    else:
+        train_df, validation_df = train_test_split(df, test_size=validation_portion, random_state=seed)
+        train_df, test_df = train_test_split(train_df, test_size=test_portion, random_state=seed)
     train_x, train_y, val_x, val_y, test_x, test_y = np.stack(train_df['quizzes'].values), np.stack(
         train_df['solutions'].values), \
                                                      np.stack(validation_df['quizzes'].values), np.stack(
