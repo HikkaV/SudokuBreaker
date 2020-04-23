@@ -59,7 +59,7 @@ class Train:
 
     def train(self, path_params='best_params.json', path_model='model.h5',
               plot_chart=False, handmade_params=None):
-        if os.path.exists(path_params) and handmade_params:
+        if os.path.exists(path_params) and not handmade_params:
             layers, average_pooling, batch, epochs, learning_rate = load_params(path_params)
         else:
             layers, average_pooling, batch, epochs, learning_rate = handmade_params
