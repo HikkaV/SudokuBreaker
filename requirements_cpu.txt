@@ -1,6 +1,6 @@
 tensorboard==2.1.0
 tensorflow-estimator==2.1.0
-tensorflow==2.0.0a0
+tensorflow==2.5.2
 scikit-learn==0.22.1
 scikit-optimize==0.7.1
 numpy==1.18.1
